@@ -7,13 +7,12 @@
 
 ########################################
 
-# Exit the script if not run using sudo/root on a VPS
+# Exit the script if not being run by root or with sudo on a DV
 function bye ()
 {
-return 0
+	return 0
 }
 
-# Doing the work
 function search ()
 {
 # If WordPress installs are found
@@ -203,7 +202,7 @@ rm ./wplist ./version_tmp ./drupallist ./joomlalist ./phpbblist 2> /dev/null
 }
 
 # Determine the server that the script is being run from, then find all installs within a 
-# certain predefined number of sublevels respective to the server's webroot and add them to
+# certain predefined number of sublevels from the domains's webroot and add them to
 # a temporary file
 
 # If on a Grid
@@ -211,7 +210,7 @@ if [[ ! -z "$SITE" ]]; then
     find ~/domains/*/ -maxdepth 5 -iwholename "*/wp-includes/version.php" > ./wplist
     find ~/domains/*/ -maxdepth 6 \( -iwholename '*/libraries/joomla/version.php' -o -iwholename '*/libraries/cms/version.php' -o -iwholename '*/libraries/cms/version/version.php' \) > ./joomlalist
     find ~/domains/*/ -maxdepth 6 -iwholename "*/modules/system/system.info" > ./drupallist
-    find ~/domains/*/ -maxdepth 6 -iwholename "*prosilver/style.cfg" > ./phpbblist
+    find ~/domains/*/ -maxdepth 5 -iwholename "*prosilver/style.cfg" > ./phpbblist
     search
 # If on Plesk
 elif [[ -f "/usr/local/psa/version" ]]; then
@@ -219,10 +218,11 @@ elif [[ -f "/usr/local/psa/version" ]]; then
 		echo "This should be run as root or sudo. Exiting..."
 		bye
 	else
-		find /var/www/vhosts/ -maxdepth 5 -type d \( -name chroot -o -name default -o -name logs -o -name error_docs -o -name fs -o -name fs-passwd -o -name ".skel" -o -name system \) -prune -o -iwholename "*/wp-includes/version.php" -print > ./wplist
-		find /var/www/vhosts/ -maxdepth 6 -type d \( -name chroot -o -name default -o -name logs -o -name error_docs -o -name fs -o -name fs-passwd -o -name ".skel" -o -name system \) -prune -o \( -iwholename '*/libraries/joomla/version.php' -o -iwholename '*/libraries/cms/version.php' -o -iwholename '*/libraries/cms/version/version.php' \) -print > ./joomlalist
-		find /var/www/vhosts/ -maxdepth 6 -type d \( -name chroot -o -name default -o -name logs -o -name error_docs -o -name fs -o -name fs-passwd -o -name ".skel" -o -name system \) -prune -o -iwholename "*/modules/system/system.info" -print > ./drupallist
-		find /var/www/vhosts/ -maxdepth 6 -type d \( -name chroot -o -name default -o -name logs -o -name error_docs -o -name fs -o -name fs-passwd -o -name ".skel" -o -name system \) -prune -o -iwholename "*prosilver/style.cfg" -print > ./phpbblist
+		paths=`/usr/local/psa/bin/domain --list | while read result; do /usr/local/psa/bin/domain --info $result; done | awk '/WWW-Root/ {print $2}'`
+		find $paths -maxdepth 5 -iwholename "*/wp-includes/version.php" > ./wplist
+		find $paths -maxdepth 6 \( -iwholename '*/libraries/joomla/version.php' -o -iwholename '*/libraries/cms/version.php' -o -iwholename '*/libraries/cms/version/version.php' \) > ./joomlalist
+		find $paths -maxdepth 6 -iwholename "*/modules/system/system.info" > ./drupallist
+		find $paths -maxdepth 5 -iwholename "*prosilver/style.cfg" > ./phpbblist
 		search
 	fi	
 # If on cPanel
@@ -234,10 +234,10 @@ elif [[ -f "/usr/local/cpanel/version" ]]; then
 		find /home/*/public_html/ -maxdepth 5 -iwholename "*/wp-includes/version.php" > ./wplist
 		find /home/*/public_html/ -maxdepth 6 \( -iwholename '*/libraries/joomla/version.php' -o -iwholename '*/libraries/cms/version.php' -o -iwholename '*/libraries/cms/version/version.php' \) > ./joomlalist
 		find /home/*/public_html/ -maxdepth 6 -iwholename "*/modules/system/system.info" > ./drupallist
-		find /home/*/public_html/ -maxdepth 6 -iwholename "*prosilver/style.cfg" > ./phpbblist
+		find /home/*/public_html/ -maxdepth 5 -iwholename "*prosilver/style.cfg" > ./phpbblist
 		search
 	fi
-# If none of the above
+# If none of the above, then  it's a DV Developer
 elif [[ ! -f "/usr/local/psa/version" ]] && [[ ! -f "/usr/local/cpanel/version" ]]; then
 	if [ "$(id -u)" != "0" ]; then
 		echo "This should be run as root or sudo. Exiting..."
@@ -246,7 +246,7 @@ elif [[ ! -f "/usr/local/psa/version" ]] && [[ ! -f "/usr/local/cpanel/version" 
 		find /var/www/ -maxdepth 6 -iwholename "*/wp-includes/version.php" > ./wplist
     	find /var/www/ -maxdepth 7 \( -iwholename '*/libraries/joomla/version.php' -o -iwholename '*/libraries/cms/version.php' -o -iwholename '*/libraries/cms/version/version.php' \) > ./joomlalist
     	find /var/www/ -maxdepth 7 -iwholename "*/modules/system/system.info" > ./drupallist
-    	find /var/www/ -maxdepth 7 -iwholename "*prosilver/style.cfg" > ./phpbblist
+    	find /var/www/ -maxdepth 6 -iwholename "*prosilver/style.cfg" > ./phpbblist
     	search
 	fi
 fi
