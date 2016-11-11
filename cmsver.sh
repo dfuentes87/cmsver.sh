@@ -2,17 +2,18 @@
 
 ########################################
 
-# Checking for WordPress, Joomla, Drupal, and phpBB installs and versions on a Media Temple Grid, Plesk 
-# and cPanel/WHM VPS, and "DV Developer"
+# Checking for WordPress, Joomla, Drupal, and phpBB installs and versions on a Media Temple Grid,
+# DV's with Plesk or cPanel/WHM, and "DV Developers"
 
 ########################################
 
-# Exit the script if not being run by root or with sudo on a DV
+# Exit the script if not run using sudo/root on a VPS
 function bye ()
 {
-	return 0
+return 0
 }
 
+# Doing the work
 function search ()
 {
 # If WordPress installs are found
@@ -69,8 +70,12 @@ if [ -s ./wplist ]; then
 else
 	echo " "
 	echo 'No WordPress installs found!'
-	echo " "
 fi
+
+# On servers with a lot of CMS, the script will start outputting the other CMS checks 
+# too fast causing things to get messy. This makes each section wait a second
+# before continuing
+sleep 1
 
 # If Joomla installs are found
 if [ -s ./joomlalist ]; then
@@ -109,8 +114,9 @@ if [ -s ./joomlalist ]; then
 else
 	echo " "
 	echo 'No Joomla installs found!'
-	echo " "
 fi
+
+sleep 1
 
 # If Drupal installs are found
 if [ -s ./drupallist ]; then
@@ -154,8 +160,9 @@ if [ -s ./drupallist ]; then
 else
 	echo " "
 	echo 'No Drupal installs found!'
-	echo " "
 fi
+
+sleep 1
 
 # If phpBB installs are found
 if [ -s ./phpbblist ]; then
@@ -202,27 +209,26 @@ rm ./wplist ./version_tmp ./drupallist ./joomlalist ./phpbblist 2> /dev/null
 }
 
 # Determine the server that the script is being run from, then find all installs within a 
-# certain predefined number of sublevels from the domains's webroot and add them to
+# certain predefined number of sublevels respective to the server's webroot and add them to
 # a temporary file
 
 # If on a Grid
 if [[ ! -z "$SITE" ]]; then
-    find ~/domains/*/ -maxdepth 5 -iwholename "*/wp-includes/version.php" > ./wplist
-    find ~/domains/*/ -maxdepth 6 \( -iwholename '*/libraries/joomla/version.php' -o -iwholename '*/libraries/cms/version.php' -o -iwholename '*/libraries/cms/version/version.php' \) > ./joomlalist
-    find ~/domains/*/ -maxdepth 6 -iwholename "*/modules/system/system.info" > ./drupallist
-    find ~/domains/*/ -maxdepth 5 -iwholename "*prosilver/style.cfg" > ./phpbblist
+    find ~/domains/*/ -maxdepth 6 -iwholename "*/wp-includes/version.php" > ./wplist
+    find ~/domains/*/ -maxdepth 7 \( -iwholename '*/libraries/joomla/version.php' -o -iwholename '*/libraries/cms/version.php' -o -iwholename '*/libraries/cms/version/version.php' \) > ./joomlalist
+    find ~/domains/*/ -maxdepth 7 -iwholename "*/modules/system/system.info" > ./drupallist
+    find ~/domains/*/ -maxdepth 6 -iwholename "*prosilver/style.cfg" > ./phpbblist
     search
-# If on Plesk
-elif [[ -f "/usr/local/psa/version" ]]; then
+# If on Plesk or a "DV Developer"
+elif [[ -f "/usr/local/psa/version" ]] || [[ ! -f "/usr/local/psa/version" ]] && [[ ! -f "/usr/local/cpanel/version" ]]; then
 	if [ "$(id -u)" != "0" ]; then
 		echo "This should be run as root or sudo. Exiting..."
 		bye
 	else
-		paths=`/usr/local/psa/bin/domain --list | while read result; do /usr/local/psa/bin/domain --info $result; done | awk '/WWW-Root/ {print $2}'`
-		find $paths -maxdepth 5 -iwholename "*/wp-includes/version.php" > ./wplist
-		find $paths -maxdepth 6 \( -iwholename '*/libraries/joomla/version.php' -o -iwholename '*/libraries/cms/version.php' -o -iwholename '*/libraries/cms/version/version.php' \) > ./joomlalist
-		find $paths -maxdepth 6 -iwholename "*/modules/system/system.info" > ./drupallist
-		find $paths -maxdepth 5 -iwholename "*prosilver/style.cfg" > ./phpbblist
+		find /var/www/ -maxdepth 7 -iwholename "*/wp-includes/version.php" > ./wplist
+		find /var/www/ -maxdepth 8 \( -iwholename '*/libraries/joomla/version.php' -o -iwholename '*/libraries/cms/version.php' -o -iwholename '*/libraries/cms/version/version.php' \) > ./joomlalist
+		find /var/www/ -maxdepth 8 -iwholename "*/modules/system/system.info" -print > ./drupallist
+		find /var/www/ -maxdepth 7 -iwholename "*prosilver/style.cfg" -print > ./phpbblist
 		search
 	fi	
 # If on cPanel
@@ -236,17 +242,5 @@ elif [[ -f "/usr/local/cpanel/version" ]]; then
 		find /home/*/public_html/ -maxdepth 6 -iwholename "*/modules/system/system.info" > ./drupallist
 		find /home/*/public_html/ -maxdepth 5 -iwholename "*prosilver/style.cfg" > ./phpbblist
 		search
-	fi
-# If none of the above, then  it's a DV Developer
-elif [[ ! -f "/usr/local/psa/version" ]] && [[ ! -f "/usr/local/cpanel/version" ]]; then
-	if [ "$(id -u)" != "0" ]; then
-		echo "This should be run as root or sudo. Exiting..."
-		bye
-	else 
-		find /var/www/ -maxdepth 6 -iwholename "*/wp-includes/version.php" > ./wplist
-    	find /var/www/ -maxdepth 7 \( -iwholename '*/libraries/joomla/version.php' -o -iwholename '*/libraries/cms/version.php' -o -iwholename '*/libraries/cms/version/version.php' \) > ./joomlalist
-    	find /var/www/ -maxdepth 7 -iwholename "*/modules/system/system.info" > ./drupallist
-    	find /var/www/ -maxdepth 6 -iwholename "*prosilver/style.cfg" > ./phpbblist
-    	search
 	fi
 fi
