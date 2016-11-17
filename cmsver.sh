@@ -16,6 +16,10 @@ return 0
 # Doing the work
 function search ()
 {
+#To handle directories and files with spaces - Start
+SAVEIFS=$IFS
+IFS=$(echo -en "\n\b")
+
 # If WordPress installs are found
 if [ -s ./wplist ]; then
 	# Get the latest version of WordPress.
@@ -203,6 +207,8 @@ else
 	echo 'No phpBB installs found!'
 	echo " "
 fi
+#To handle directories and files with spaces - End
+IFS=$SAVEIFS
 
 # Delete all temporary lists
 rm ./wplist ./version_tmp ./drupallist ./joomlalist ./phpbblist 2> /dev/null
