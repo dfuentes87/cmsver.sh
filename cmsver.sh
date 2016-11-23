@@ -82,7 +82,7 @@ if [ -s ./joomlalist ]; then
 	# If old Joomla installs exist, display the list but first remove the 
 	# file being checked and provide a better path
 	elif [[ -s ./oldjoomla.txt ]]; then
-    	cat ./oldjoomla.txt | sed 's/libraries\/.*//g' | sed 's/users\/\.home\///g' & rm ./oldjoomla.txt 2> /dev/null
+    	cat ./oldjoomla.txt | sed 's/libraries\/.*.php//g' | sed 's/users\/\.home\///g' & rm ./oldjoomla.txt 2> /dev/null
 	fi
 else
 	echo " "
@@ -140,7 +140,7 @@ if [ -s ./phpbblist ]; then
 	# For each phpBB in the temp file
 	for f in $(cat ./phpbblist); do
 		# Define the phpBB's version as a temporary variable
-		phpbb_version=($(grep -H "phpbb_version.=." $f | awk '{print $0}'));
+		phpbb_version=($(grep -H "phpbb_version.=." $f | awk '{print $3}'));
 		# Check the installed phpBB version against the latest version.
 		# If the version is old send it to the file oldphpbb.txt 
 		if [[ ${phpbb_version//./} -ne ${new_phpbb_ver//./} ]]; then
@@ -152,8 +152,8 @@ if [ -s ./phpbblist ]; then
     		echo "**phpBB installs found but are all up to date**" & rm ./oldphpbb.txt 2> /dev/null
 	# If old phpBB installs exist, display list but first remove the 
 	# file being checked and provide a better path
-		elif [[ -s ./newphpbb.txt ]] && [[ -s ./oldphpbb.txt ]]; then
-    			cat ./oldphpbb.txt | sed 's/prosilver\/style.cfg//g' | sed 's/users\/\.home\///g' & rm ./oldphpbb.txt
+		elif [[ -s ./oldphpbb.txt ]]; then
+    			cat ./oldphpbb.txt | sed 's/prosilver\/style.cfg//g' | sed 's/users\/\.home\///g' & rm ./oldphpbb.txt 2> /dev/null
     	fi
 else
 	echo " "
