@@ -140,7 +140,7 @@ if [ -s ./phpbblist ]; then
 	# For each phpBB in the temp file
 	for f in $(cat ./phpbblist); do
 		# Define the phpBB's version as a temporary variable
-		phpbb_version=($(grep -H "phpbb_version.=." $f | awk '{print $3}'));
+		phpbb_version=$(grep -H "version.=." $f | awk '{print $3}');
 		# Check the installed phpBB version against the latest version.
 		# If the version is old send it to the file oldphpbb.txt 
 		if [[ ${phpbb_version//./} -ne ${new_phpbb_ver//./} ]]; then
@@ -158,13 +158,47 @@ if [ -s ./phpbblist ]; then
 else
 	echo " "
 	echo 'No phpBB installs found!'
+fi
+
+sleep 1
+
+# If Magento installs are found
+if [ -s ./magentolist ]; then
+	# Get the latest version of Magento and define it
+	new_magento_ver=$( curl -s https://api.github.com/repos/magento/magento2/tags | awk -F'"' '/name/ {print $4}' | awk -F'-' '!/-[A-Za-z]/ {print $0}' | head -1 )
+
+	# Let the user know what the latest version is
+	echo " "
+	echo "Magento - Latest version is $new_magento_ver"
+
+	# For each Magento in the temp file
+	for f in $(cat ./magentolist); do
+		# Define the Magento's version as a temporary variable
+		magento_version=$(grep -A 4 'return array(' $f | awk -F"'" 'NR>=2{ print $4 }' | awk 'BEGIN { ORS = "." } { print }');
+		# Check the installed Magento version against the latest version.
+		# If the version is old send it to the file oldmagento.txt 
+		if [[ ${magento_version//./} -ne ${new_magento_ver//./} ]]; then
+		echo -en "$f = $magento_version\n" >> ./oldmagento.txt
+		fi
+	done
+	# If only new Magento installs exist then say so
+    	if [[ ! -s ./oldmagento.txt ]]; then
+    		echo "**Magento installs found but are all up to date**" & rm ./oldmagento.txt 2> /dev/null
+	# If old Magento installs exist, display list but first remove the 
+	# file being checked and provide a better path
+		elif [[ -s ./oldmagento.txt ]]; then
+    			cat ./oldmagento.txt | sed 's/app\/Mage.php//g' | sed 's/users\/\.home\///g' & rm ./oldmagento.txt 2> /dev/null
+    	fi
+else
+	echo " "
+	echo 'No Magento installs found!'
 	echo " "
 fi
 
 IFS=$SAVEIFS
 
 # Delete all temporary lists
-rm ./wplist ./drupallist ./joomlalist ./phpbblist 2> /dev/null
+rm ./wplist ./drupallist ./joomlalist ./phpbblist ./magentolist 2> /dev/null
 }
 
 # Determine the server that the script is being run from, then find all installs within a 
@@ -173,10 +207,11 @@ rm ./wplist ./drupallist ./joomlalist ./phpbblist 2> /dev/null
 
 # If on a Grid
 if [[ ! -z "$SITE" ]]; then
-    find ~/domains/*/ -maxdepth 6 -iwholename "*/wp-includes/version.php" > ./wplist
+    find ~/domains/*/ -maxdepth 7 -iwholename "*/wp-includes/version.php" > ./wplist
     find ~/domains/*/ -maxdepth 7 \( -iwholename '*/libraries/joomla/version.php' -o -iwholename '*/libraries/cms/version.php' -o -iwholename '*/libraries/cms/version/version.php' \) > ./joomlalist
     find ~/domains/*/ -maxdepth 7 -iwholename "*/modules/system/system.info" > ./drupallist
-    find ~/domains/*/ -maxdepth 6 -iwholename "*prosilver/style.cfg" > ./phpbblist
+    find ~/domains/*/ -maxdepth 7 -iwholename "*prosilver/style.cfg" > ./phpbblist
+    find ~/domains/*/ -maxdepth 7 -iwholename "*/app/Mage.php" > ./magentolist
     search
 # If on Plesk or a "DV Developer"
 elif [[ -f "/usr/local/psa/version" ]] || [[ ! -f "/usr/local/psa/version" ]] && [[ ! -f "/usr/local/cpanel/version" ]]; then
@@ -184,10 +219,11 @@ elif [[ -f "/usr/local/psa/version" ]] || [[ ! -f "/usr/local/psa/version" ]] &&
 		echo "This should be run as root or sudo. Exiting..."
 		bye
 	else
-		find /var/www/ -maxdepth 7 -iwholename "*/wp-includes/version.php" > ./wplist
+		find /var/www/ -maxdepth 8 -iwholename "*/wp-includes/version.php" > ./wplist
 		find /var/www/ -maxdepth 8 \( -iwholename '*/libraries/joomla/version.php' -o -iwholename '*/libraries/cms/version.php' -o -iwholename '*/libraries/cms/version/version.php' \) > ./joomlalist
 		find /var/www/ -maxdepth 8 -iwholename "*/modules/system/system.info" -print > ./drupallist
-		find /var/www/ -maxdepth 7 -iwholename "*prosilver/style.cfg" -print > ./phpbblist
+		find /var/www/ -maxdepth 8 -iwholename "*prosilver/style.cfg" -print > ./phpbblist
+		find /var/www/ -maxdepth 8 -iwholename "*/app/Mage.php" -print > ./magentolist
 		search
 	fi	
 # If on cPanel
@@ -196,10 +232,11 @@ elif [[ -f "/usr/local/cpanel/version" ]]; then
 		echo "This should be run as root or sudo. Exiting..."
 		bye
 	else
-		find /home/*/public_html/ -maxdepth 5 -iwholename "*/wp-includes/version.php" > ./wplist
+		find /home/*/public_html/ -maxdepth 6 -iwholename "*/wp-includes/version.php" > ./wplist
 		find /home/*/public_html/ -maxdepth 6 \( -iwholename '*/libraries/joomla/version.php' -o -iwholename '*/libraries/cms/version.php' -o -iwholename '*/libraries/cms/version/version.php' \) > ./joomlalist
 		find /home/*/public_html/ -maxdepth 6 -iwholename "*/modules/system/system.info" > ./drupallist
-		find /home/*/public_html/ -maxdepth 5 -iwholename "*prosilver/style.cfg" > ./phpbblist
+		find /home/*/public_html/ -maxdepth 6 -iwholename "*prosilver/style.cfg" > ./phpbblist
+		find /home/*/public_html/ -maxdepth 6 -iwholename "*/app/Mage.php" > ./magentolist
 		search
 	fi
 fi
