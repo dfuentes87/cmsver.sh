@@ -170,11 +170,15 @@ if [ -s ./magentolist ]; then
 	# Let the user know what the latest version is
 	echo " "
 	echo "Magento - Latest version is $new_magento_ver"
-
 	# For each Magento in the temp file
 	for f in $(cat ./magentolist); do
 		# Define the Magento's version as a temporary variable
 		magento_version=$(grep -A 4 'return array(' $f | awk -F"'" 'NR>=2{ print $4 }' | awk 'BEGIN { ORS = "." } { print }');
+		# In old Magento installs, the version is formatted different, so we need to check
+		# for that and use it instead if necessary
+		if [[ -z $magento_version ]]; then
+			magento_version=$(grep "return '" $f | awk -F"'" '{ print $2 }');
+		fi
 		# Check the installed Magento version against the latest version.
 		# If the version is old send it to the file oldmagento.txt 
 		if [[ ${magento_version//./} -ne ${new_magento_ver//./} ]]; then
