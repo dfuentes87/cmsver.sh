@@ -13,6 +13,7 @@ BoldOff="\033[22m"
 # Clean everything up before exiting
 cleanup () {
   rm -f ./wplist ./drupallist ./joomlalist ./phpbblist ./magentolist
+  rm -f ./oldwp.txt ./olddrupal.txt ./oldjoomla.txt ./oldphpbb.txt ./oldmagento.txt
   exit
 }
 
@@ -49,7 +50,7 @@ version_checker () {
     # If old WP installs exist, display the list but first remove the
     # file and its parent directory being checked and provide a better path 
     elif [[ -s ./oldwp.txt ]]; then
-      sed 's/wp-includes\/version.php//g' ./oldwp.txt | sed 's/users\/\.home\///g'; rm -f ./oldwp.txt
+      sed 's/wp-includes\/version.php//g' ./oldwp.txt | sed 's/users\/\.home\///g'
     fi
   else
     echo
@@ -82,11 +83,11 @@ version_checker () {
     done
     # If only new Joomla installs exist then say so
     if [[ ! -s ./oldjoomla.txt ]]; then
-      echo "**Joomla installs found but are all up to date**"; rm -f ./oldjoomla.txt
+      echo "**Joomla installs found but are all up to date**"
     # If old Joomla installs exist, display the list but first remove the 
     # file being checked and provide a better path
     elif [[ -s ./oldjoomla.txt ]]; then
-      sed 's/libraries\/.*.php//g' ./oldjoomla.txt | sed 's/users\/\.home\///g'; rm -f ./oldjoomla.txt
+      sed 's/libraries\/.*.php//g' ./oldjoomla.txt | sed 's/users\/\.home\///g'
     fi
   else
     echo
@@ -119,11 +120,11 @@ version_checker () {
     done
     # If only new Drupal installs exist then say so
     if [[ ! -s ./olddrupal.txt ]]; then
-      echo "**Drupal installs found but are all up to date**"; rm -f ./olddrupal.txt
+      echo "**Drupal installs found but are all up to date**"
     # If old Drupal installs exist, display the list but first remove the
     # file being checked and provide a better path 
     elif [[ -s ./olddrupal.txt ]]; then
-      sed 's/modules\/system\/system\.info//g' ./olddrupal.txt | sed 's/users\/\.home\///g'; rm -f ./olddrupal.txt
+      sed 's/modules\/system\/system\.info//g' ./olddrupal.txt | sed 's/users\/\.home\///g'
     fi
   else
     echo
@@ -153,11 +154,11 @@ version_checker () {
     done
     # If only new phpBB installs exist then say so
     if [[ ! -s ./oldphpbb.txt ]]; then
-      echo "**phpBB installs found but are all up to date**"; rm -f ./oldphpbb.txt
+      echo "**phpBB installs found but are all up to date**"
       # If old phpBB installs exist, display list but first remove the 
       # file being checked and provide a better path
     elif [[ -s ./oldphpbb.txt ]]; then
-      sed 's/styles\/prosilver\/style.cfg//g' ./oldphpbb.txt | sed 's/users\/\.home\///g'; rm -f ./oldphpbb.txt
+      sed 's/styles\/prosilver\/style.cfg//g' ./oldphpbb.txt | sed 's/users\/\.home\///g'
     fi
   else
     echo
@@ -191,11 +192,11 @@ version_checker () {
     done
     # If only new Magento installs exist then say so
     if [[ ! -s ./oldmagento.txt ]]; then
-      echo "**Magento installs found but are all up to date**"; rm -f ./oldmagento.txt
+      echo "**Magento installs found but are all up to date**"
     # If old Magento installs exist, display list but first remove the 
     # file being checked and provide a better path
     elif [[ -s ./oldmagento.txt ]]; then
-      sed 's/app\/Mage.php//g' ./oldmagento.txt | sed 's/users\/\.home\///g'; rm -f ./oldmagento.txt
+      sed 's/app\/Mage.php//g' ./oldmagento.txt | sed 's/users\/\.home\///g'
     fi
   else
     echo
