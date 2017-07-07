@@ -66,7 +66,7 @@ if [[ -z $wp_search ]]; then
   echo 'No WordPress installs found!'
 else
   # Get the latest version of WordPress and define it
-  #new_wp_ver=$(curl -s http://api.wordpress.org/core/version-check/1.5/ | head -n 4 | tail -n 1)
+  new_wp_ver=$(curl -s http://api.wordpress.org/core/version-check/1.5/ | head -n 4 | tail -n 1)
   # Let the user know what the latest version is
   echo -e "${BoldOn}WordPress - Latest version is $new_wp_ver${BoldOff}"
   for wp_path in $wp_search; do
