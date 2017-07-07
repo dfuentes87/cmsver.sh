@@ -35,13 +35,13 @@ elif [[ -f "/usr/local/psa/version" ]] || [[ ! -f "/usr/local/psa/version" ]] &&
     echo "This script needs to run as root or sudo. Exiting..."
     exit 0
   else
-  wp_search=$(find /var/www/ -maxdepth 7 -iwholename "*/wp-includes/version.php")
-  joomla_search=$(find /var/www/ -maxdepth 7 \( -iwholename '*/libraries/joomla/version.php' -o -iwholename '*/libraries/cms/version.php' -o -iwholename '*/libraries/cms/version/version.php' \))
-  drupal_search=$(find /var/www/ -maxdepth 7 -iwholename "*/modules/system/system.info")
-  phpbb_search=$(find /var/www/ -maxdepth 7 -iwholename "*prosilver/style.cfg")
-  magento_search=$(find /var/www/ -maxdepth 7 -iwholename "*/app/Mage.php")
-  opencart_search=$(find /var/www/ -maxdepth 7 -iwholename "*/upload/index.php")
-  moodle_search=$(find $(find /var/www/ -maxdepth 5 -type f -name "TRADEMARK.txt" | sed 's/TRADEMARK.txt//') -maxdepth 1 -name "version.php" -print > ./moodlelist)
+    wp_search=$(find /var/www/ -maxdepth 7 -iwholename "*/wp-includes/version.php")
+    joomla_search=$(find /var/www/ -maxdepth 7 \( -iwholename '*/libraries/joomla/version.php' -o -iwholename '*/libraries/cms/version.php' -o -iwholename '*/libraries/cms/version/version.php' \))
+    drupal_search=$(find /var/www/ -maxdepth 7 -iwholename "*/modules/system/system.info")
+    phpbb_search=$(find /var/www/ -maxdepth 7 -iwholename "*prosilver/style.cfg")
+    magento_search=$(find /var/www/ -maxdepth 7 -iwholename "*/app/Mage.php")
+    opencart_search=$(find /var/www/ -maxdepth 7 -iwholename "*/upload/index.php")
+    moodle_search=$(find $(find /var/www/ -maxdepth 5 -type f -name "TRADEMARK.txt" | sed 's/TRADEMARK.txt//') -maxdepth 1 -name "version.php" -print > ./moodlelist)
   fi
 
 ## If it's a DV with cPanel
