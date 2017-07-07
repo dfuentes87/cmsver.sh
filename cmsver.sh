@@ -1,267 +1,200 @@
 #!/bin/bash
 
-#########################################################################################
+###############################################################################
 
-# Checking for WordPress, Joomla, Drupal, phpBB, and Magento installs and respective
-# versions on a Media Temple Grid, DV's with Plesk or cPanel/WHM, and DV Developers
+# Find popular CMS (and the WP Revslider plugin) installed on a Media Temple
+# Grid or DV with Plesk/cPanel, and verify the version against the latest
+# official version release.
 
-#########################################################################################
+###############################################################################
 
+# To make things easier to read
 BoldOn="\033[1m"
 BoldOff="\033[22m"
 
-# Clean everything up before exiting
-cleanup () {
-  rm -f ./wplist ./drupallist ./joomlalist ./phpbblist ./magentolist
-  rm -f ./oldwp ./olddrupal ./oldjoomla ./oldphpbb ./oldmagento
-  exit
-}
+# To handle directories/files with spaces in the name
+SAVEIFS=$IFS
+IFS=$(echo -en "\n\b")
 
-# Trap to cleanup after itself
-trap cleanup INT EXIT SIGTERM SIGHUP SIGQUIT
-
-# Doing the work
-version_checker () {
-  # To handle directories/files with spaces in the name
-  SAVEIFS=$IFS
-  IFS=$(echo -en "\n\b")
-
-  # If WordPress installs are found
-  if [ -s ./wplist ]; then
-    # Get the latest version of WordPress and define it
-    new_wp_ver=$(curl -s http://api.wordpress.org/core/version-check/1.5/ | head -n 4 | tail -n 1)
-      
-    # Let the user know what the latest version is
-    echo
-    echo -e "${BoldOn}WordPress - Latest version is $new_wp_ver${BoldOff}"
-    # For each WordPress in the temp file
-    cat ./wplist | while IFS= read -r f; do
-      # Define the WordPress's version as a temporary variable
-      wp_version=("$(grep "wp_version =" "$f" | cut -d\' -f2)");
-      # Check the installed WordPress version against the latest version.
-      # If the version is old send it to the file oldwp 
-      if [[ ${wp_version//./} -ne ${new_wp_ver//./} ]]; then
-        echo -en "$f = $wp_version\n" >> ./oldwp
-      fi
-    done
-    # If only new WP installs exist then say so
-    if [[ ! -s ./oldwp ]]; then
-      echo "**WordPress installs found but are all up to date**"
-    # If old WP installs exist, display the list but first remove the
-    # file and its parent directory being checked and provide a better path 
-    elif [[ -s ./oldwp ]]; then
-      sed 's/wp-includes\/version.php//g' ./oldwp | sed 's/users\/\.home\///g'
-    fi
-  else
-    echo
-    echo 'No WordPress installs found!'
-  fi
-
-  # On servers with a lot of CMS, the script will start outputting the next CMS check 
-  # before the previous one is done with its output. This makes each section wait a 
-  # second before continuing
-  sleep 1
-
-  # If Joomla installs are found
-  if [ -s ./joomlalist ]; then
-    # Get the latest version of Joomla and define it
-    new_joomla_ver=$(curl -s https://api.github.com/repos/joomla/joomla-cms/releases/latest | awk -F\" '/tag_name/ { print $4 }')
-    
-    # Let the user know what the latest version is
-    echo
-    echo -e "${BoldOn}Joomla - Latest version is $new_joomla_ver${BoldOff}"
-
-    # For each Joomla in the temp file
-    cat ./joomlalist | while IFS= read -r f; do
-      # Define the Joomla's version as a temporary variable
-      version=("$(grep -E "var|const|public" "$f" | awk -F\' '/RELEASE/{print$2}').$(grep -E "var|const|public" "$f" | awk -F\' '/DEV_LEVEL/{print$2}')");
-      # Check the installed Joomla version against the latest version.
-      # If the version is old send it to the file oldjoomla 
-      if [[ ${version//./} -ne ${new_joomla_ver//./} ]]; then
-        echo -en "$f = $version\n" >> ./oldjoomla
-      fi
-    done
-    # If only new Joomla installs exist then say so
-    if [[ ! -s ./oldjoomla ]]; then
-      echo "**Joomla installs found but are all up to date**"
-    # If old Joomla installs exist, display the list but first remove the 
-    # file being checked and provide a better path
-    elif [[ -s ./oldjoomla ]]; then
-      sed 's/libraries\/.*.php//g' ./oldjoomla | sed 's/users\/\.home\///g'
-    fi
-  else
-    echo
-    echo 'No Joomla installs found!'
-  fi
-
-  sleep 1
-
-  # If Drupal installs are found
-  if [ -s ./drupallist ]; then
-    # Get the latest versions of Drupal and define it:
-    # This first one is considered the latest but ready for production
-    new_drupal_ver1=$(curl -s https://www.drupal.org/project/drupal | grep '<h4>Drupal core' | grep -v dev | head -n 1 | awk -F' ' '{print $3}' | awk -F'<' '{print $1}')
-    # This second one is considered older but still up to date
-    new_drupal_ver2=$(curl -s https://www.drupal.org/project/drupal | grep '<h4>Drupal core' | grep -v dev | head -n 2 | tail -n 1 | awk -F' ' '{print $3}' | awk -F'<' '{print $1}')
-   
-    # Let the user know what the latest version is
-    echo
-    echo -e "${BoldOn}Drupal - Latest version is $new_drupal_ver1, stable version is $new_drupal_ver2${BoldOff}"
-
-    # For each Drupal in the temp file
-    cat ./drupallist | while IFS= read -r f; do
-      # Define the Drupal version as a temporary variable
-      version=$(grep "version = \"" "$f" | cut -d '"' -f2);
-      # Check the installed Drupal version against the latest versions.
-      # If the version is considered old, send it to the file olddrupal
-      if [[ ${version//./} -ne ${new_drupal_ver1//./} ]] && [[ ${version//./} -ne ${new_drupal_ver2//./} ]]; then
-        echo -en "$f = $version\n" >> ./olddrupal
-      fi
-    done
-    # If only new Drupal installs exist then say so
-    if [[ ! -s ./olddrupal ]]; then
-      echo "**Drupal installs found but are all up to date**"
-    # If old Drupal installs exist, display the list but first remove the
-    # file being checked and provide a better path 
-    elif [[ -s ./olddrupal ]]; then
-      sed 's/modules\/system\/system\.info//g' ./olddrupal | sed 's/users\/\.home\///g'
-    fi
-  else
-    echo
-    echo 'No Drupal installs found!'
-  fi
-
-  sleep 1
-
-  # If phpBB installs are found
-  if [ -s ./phpbblist ]; then
-    # Get the latest version of phpBB and define it
-    new_phpbb_ver=$(curl -s https://api.github.com/repos/phpbb/phpbb/tags | awk -F'"' '/name/ {print $4}' | awk -F'-' '!/-[A-Za-z]/ {print $0}' | awk -F'-' 'NR==2{print $2}')
-
-    # Let the user know what the latest version is
-    echo
-    echo -e "${BoldOn}phpBB - Latest version is $new_phpbb_ver${BoldOff}"
-
-    # For each phpBB in the temp file
-    cat ./phpbblist | while IFS= read -r f; do
-      # Define the phpBB's version as a temporary variable
-      phpbb_version=$(grep -H "version.=." "$f" | awk 'NR==1{print $3}');
-      # Check the installed phpBB version against the latest version.
-      # If the version is old send it to the file oldphpbb 
-      if [[ ${phpbb_version//./} -ne ${new_phpbb_ver//./} ]]; then
-        echo -en "$f = $phpbb_version\n" >> ./oldphpbb
-      fi
-    done
-    # If only new phpBB installs exist then say so
-    if [[ ! -s ./oldphpbb ]]; then
-      echo "**phpBB installs found but are all up to date**"
-      # If old phpBB installs exist, display list but first remove the 
-      # file being checked and provide a better path
-    elif [[ -s ./oldphpbb ]]; then
-      sed 's/styles\/prosilver\/style.cfg//g' ./oldphpbb | sed 's/users\/\.home\///g'
-    fi
-  else
-    echo
-    echo 'No phpBB installs found!'
-  fi
-
-  sleep 1
-
-  # If Magento installs are found
-  if [ -s ./magentolist ]; then
-    # Get the latest version of Magento and define it
-    new_magento_ver=$(curl -s https://api.github.com/repos/magento/magento2/tags | awk -F'"' '/name/ {print $4}' | awk -F'-' '!/-[A-Za-z]/ {print $0}' | head -1)
-
-    # Let the user know what the latest version is
-    echo
-    echo -e "${BoldOn}Magento - Latest version is $new_magento_ver${BoldOff}"
-    # For each Magento in the temp file
-    cat ./magentolist | while IFS= read -r f; do
-      # Define the Magento's version as a temporary variable
-      magento_version=$(grep -A 4 'return array(' "$f" | awk -F"'" 'NR>=2{ print $4 }' | awk 'BEGIN { ORS = "." } { print }');
-      # In old Magento installs, the version is formatted different, so we need to check
-      # for that and use it instead if necessary
-      if [[ -z $magento_version ]]; then
-        magento_version=$(grep "return '" "$f" | awk -F"'" '{ print $2 }');
-      fi
-      # Check the installed Magento version against the latest version.
-      # If the version is old send it to the file oldmagento 
-      if [[ ${magento_version//./} -ne ${new_magento_ver//./} ]]; then
-        echo -en "$f = $magento_version\n" >> ./oldmagento
-      fi
-    done
-    # If only new Magento installs exist then say so
-    if [[ ! -s ./oldmagento ]]; then
-      echo "**Magento installs found but are all up to date**"
-    # If old Magento installs exist, display list but first remove the 
-    # file being checked and provide a better path
-    elif [[ -s ./oldmagento ]]; then
-      sed 's/app\/Mage.php//g' ./oldmagento | sed 's/users\/\.home\///g'
-    fi
-  else
-    echo
-    echo 'No Magento installs found!'
-    echo
-  fi
-
-  IFS=$SAVEIFS
-}
-
-# Determine the server that the script is being run from, then find all installs within a 
-# certain predefined number of sublevels respective to the server's webroot and add them to
-# a temporary file
-
-# If on a Grid
+echo "Searching for installed CMS..."
+echo
+# Check what type of server it is, then define variables with the appropriate search path
+## If it's a Grid
 if [[ ! -z "$SITE" ]]; then
-  echo "Looking for WordPress..."
-  find ~/domains/*/ -maxdepth 7 -iwholename "*/wp-includes/version.php" > ./wplist
-  echo "Looking for Joomla..."
-  find ~/domains/*/ -maxdepth 7 \( -iwholename '*/libraries/joomla/version.php' -o -iwholename '*/libraries/cms/version.php' -o -iwholename '*/libraries/cms/version/version.php' \) > ./joomlalist
-  echo "Looking for Drupal..."
-  find ~/domains/*/ -maxdepth 7 -iwholename "*/modules/system/system.info" > ./drupallist
-  echo "Looking for phpBB..."
-  find ~/domains/*/ -maxdepth 7 -iwholename "*prosilver/style.cfg" > ./phpbblist
-  echo "Looking for Magento..."
-  find ~/domains/*/ -maxdepth 7 -iwholename "*/app/Mage.php" > ./magentolist
-  version_checker
-# If on Plesk or a DV Developer
+  wp_search=$(find ~/domains/*/ -maxdepth 7 -iwholename "*/wp-includes/version.php") 
+  joomla_search=$(find ~/domains/*/ -maxdepth 7 \( -iwholename '*/libraries/joomla/version.php' -o -iwholename '*/libraries/cms/version.php' -o -iwholename '*/libraries/cms/version/version.php' \)) 
+  drupal_search=$(find ~/domains/*/ -maxdepth 7 -iwholename "*/modules/system/system.info")
+  phpbb_search=$(find ~/domains/*/ -maxdepth 7 -iwholename "*prosilver/style.cfg") 
+  magento_search=$(find ~/domains/*/ -maxdepth 7 -iwholename "*/app/Mage.php") 
+  opencart_search=$(find ~/domains/*/ -maxdepth 7 -iwholename "*/upload/index.php") 
+  moodle_search=$(find $(find ~/domains/*/ -maxdepth 5 -type f -name "TRADEMARK.txt" | sed 's/TRADEMARK.txt//') -maxdepth 1 -name "version.php" -print > ./moodlelist) 
+## If it's a DV with Plesk or DV Dev
 elif [[ -f "/usr/local/psa/version" ]] || [[ ! -f "/usr/local/psa/version" ]] && [[ ! -f "/usr/local/cpanel/version" ]]; then
   # Exit the script if not run using sudo/root
   if [ "$(id -u)" != "0" ]; then
     echo "This script needs to run as root or sudo. Exiting..."
     exit 0
   else
-    echo "Looking for WordPress..."
-    find /var/www/ -maxdepth 8 -iwholename "*/wp-includes/version.php" > ./wplist
-    echo "Looking for Joomla..."
-    find /var/www/ -maxdepth 8 \( -iwholename '*/libraries/joomla/version.php' -o -iwholename '*/libraries/cms/version.php' -o -iwholename '*/libraries/cms/version/version.php' \) > ./joomlalist
-    echo "Looking for Drupal..."
-    find /var/www/ -maxdepth 8 -iwholename "*/modules/system/system.info" -print > ./drupallist
-    echo "Looking for phpBB..."
-    find /var/www/ -maxdepth 8 -iwholename "*prosilver/style.cfg" -print > ./phpbblist
-    echo "Looking for Magento..."
-    find /var/www/ -maxdepth 8 -iwholename "*/app/Mage.php" -print > ./magentolist
-    version_checker
-  fi  
-# If on cPanel
+  wp_search=$(find /var/www/ -maxdepth 7 -iwholename "*/wp-includes/version.php")
+  joomla_search=$(find /var/www/ -maxdepth 7 \( -iwholename '*/libraries/joomla/version.php' -o -iwholename '*/libraries/cms/version.php' -o -iwholename '*/libraries/cms/version/version.php' \))
+  drupal_search=$(find /var/www/ -maxdepth 7 -iwholename "*/modules/system/system.info")
+  phpbb_search=$(find /var/www/ -maxdepth 7 -iwholename "*prosilver/style.cfg")
+  magento_search=$(find /var/www/ -maxdepth 7 -iwholename "*/app/Mage.php")
+  opencart_search=$(find /var/www/ -maxdepth 7 -iwholename "*/upload/index.php")
+  moodle_search=$(find $(find /var/www/ -maxdepth 5 -type f -name "TRADEMARK.txt" | sed 's/TRADEMARK.txt//') -maxdepth 1 -name "version.php" -print > ./moodlelist)
+  fi
+
+## If it's a DV with cPanel
 elif [[ -f "/usr/local/cpanel/version" ]]; then
   # Exit the script if not run using sudo/root
   if [ "$(id -u)" != "0" ]; then
     echo "This script needs to run as root or sudo. Exiting..."
     exit 0
   else
-    echo "Looking for WordPress..."
-    find /home/*/public_html/ -maxdepth 6 -iwholename "*/wp-includes/version.php" > ./wplist
-    echo "Looking for Joomla..."
-    find /home/*/public_html/ -maxdepth 6 \( -iwholename '*/libraries/joomla/version.php' -o -iwholename '*/libraries/cms/version.php' -o -iwholename '*/libraries/cms/version/version.php' \) > ./joomlalist
-    echo "Looking for Drupal..."
-    find /home/*/public_html/ -maxdepth 6 -iwholename "*/modules/system/system.info" > ./drupallist
-    echo "Looking for phpBB..."
-    find /home/*/public_html/ -maxdepth 6 -iwholename "*prosilver/style.cfg" > ./phpbblist
-    echo "Looking for Magento..."
-    find /home/*/public_html/ -maxdepth 6 -iwholename "*/app/Mage.php" > ./magentolist
-    version_checker
+    wp_search=$(find /home/*/ -maxdepth 6 -iwholename "*/wp-includes/version.php")
+    joomla_search=$(find /home/*/ -maxdepth 6 \( -iwholename '*/libraries/joomla/version.php' -o -iwholename '*/libraries/cms/version.php' -o -iwholename '*/libraries/cms/version/version.php' \))
+    drupal_search=$(find /home/*/ -maxdepth 6 -iwholename "*/modules/system/system.info")
+    phpbb_search=$(find /home/*/ -maxdepth 6 -iwholename "*prosilver/style.cfg")
+    magento_search=$(find /home/*/ -maxdepth 6 -iwholename "*/app/Mage.php")
+    opencart_search=$(find /home/*/ -maxdepth 6 -iwholename "*/upload/index.php")
+    moodle_search=$(find $(find /home/*/ -maxdepth 6 -type f -name "TRADEMARK.txt" | sed 's/TRADEMARK.txt//') -maxdepth 1 -name "version.php" -print > ./moodlelist)
   fi
 fi
 
-cleanup
+# WordPress
+if [[ -z $wp_search ]]; then
+  echo 'No WordPress installs found!'
+else
+  # Get the latest version of WordPress and define it
+  #new_wp_ver=$(curl -s http://api.wordpress.org/core/version-check/1.5/ | head -n 4 | tail -n 1)
+  # Let the user know what the latest version is
+  echo -e "${BoldOn}WordPress - Latest version is $new_wp_ver${BoldOff}"
+  for wp_path in $wp_search; do
+    # For each WordPress define the WordPress's version as a temporary variable
+    wp_version=$(grep '$wp_version =' $wp_path | cut -d\' -f2)
+    # Check the installed WordPress version against the latest version
+    if [[ ${wp_version//./} -ne ${new_wp_ver//./} ]]; then
+      echo "$(echo "$wp_path" | sed 's/wp-includes\/version.php//g; s/users\/\.home\///g') = "$wp_version""
+    fi
+  done
+fi
+echo
+
+# Joomla
+if [[ -z $joomla_search ]]; then
+  echo 'No Joomla installs found!'
+else
+  # Get the latest version of Joomla and define it
+  new_joomla_ver=$(curl -s https://api.github.com/repos/joomla/joomla-cms/releases/latest | awk -F\" '/tag_name/ { print $4 }')
+  # Let the user know what the latest version is
+  echo -e "${BoldOn}Joomla - Latest version is $new_joomla_ver${BoldOff}"
+  for joomla_path in $joomla_search; do
+    # For each Joomla define the Joomla's version as a temporary variable
+    joomla_version="$(grep -E "var|const|public" $joomla_path | awk -F\' '/RELEASE/{print$2}').$(grep -E "var|const|public" $joomla_path | awk -F\' '/DEV_LEVEL/{print$2}')"
+    # Check the installed Joomla version against the latest version
+    if [[ ${joomla_version//./} -ne ${new_joomla_ver//./} ]]; then
+      echo "$(echo "$joomla_path" | sed 's/libraries\/.*.php//g; s/users\/\.home\///g') = "$joomla_version""
+    fi
+  done
+fi
+echo
+
+# Drupal
+if [[ -z $drupal_search ]]; then
+  echo 'No Drupal installs found!'
+else
+  # Get the latest version of Drupal and define it
+  # This first one is considered the latest but ready for production
+  new_drupal_ver1=$( curl -s https://www.drupal.org/project/drupal | grep '<h4>Drupal core' | grep -v dev | head -n 1 | awk -F' ' '{print $3}' | awk -F'<' '{print $1}' )
+  # This second one is considered older but still up to date
+  new_drupal_ver2=$( curl -s https://www.drupal.org/project/drupal | grep '<h4>Drupal core' | grep -v dev | head -n 2 | tail -n 1 | awk -F' ' '{print $3}' | awk -F'<' '{print $1}' )
+  # Let the user know what the latest version is
+  echo -e "${BoldOn}Drupal - Latest version is $new_drupal_ver1, stable version is $new_drupal_ver2${BoldOff}"
+  for drupal_path in $drupal_search; do
+    # For each Drupal define the Drupal's version as a temporary variable
+    drupal_version=$(grep "version = \"" $drupal_path | cut -d '"' -f2)
+    # Check the installed Drupal version against the latest version
+    if [[ ${drupal_version//./} -ne ${new_drupal_ver1//./} ]] && [[ ${drupal_version//./} -ne ${new_drupal_ver2//./} ]]; then
+      echo "$(echo "$drupal_path" | sed 's/modules\/system\/system\.info//g; s/users\/\.home\///g') = "$drupal_version""
+    fi
+  done
+fi
+echo
+
+# phpBB
+if [[ -z $phpbb_search ]]; then
+  echo 'No phpBB installs found!'
+else
+  # Get the latest version of phpBB and define it
+  new_phpbb_ver=$(curl -s https://api.github.com/repos/phpbb/phpbb/tags | awk -F'"' '/name/ {print $4}' | awk -F'-' '!/-[A-Za-z]/ {print $0}' | awk -F'-' 'NR==2{print $2}')
+  # Let the user know what the latest version is
+  echo -e "${BoldOn}phpBB - Latest version is $new_phpbb_ver${BoldOff}"
+  for phpbb_path in $phpbb_search; do
+    # For each phpBB define the phpBB's version as a temporary variable
+    phpbb_version=$(grep -H "version.=." $phpbb_path | awk 'NR==1{print $3}')
+    # Check the installed phpBB version against the latest version
+    if [[ ${phpbb_version//./} -ne ${new_phpbb_ver//./} ]]; then
+      echo "$(echo "$phpbb_path" | sed 's/styles\/prosilver\/style.cfg//g; s/users\/\.home\///g') = "$phpbb_version""
+    fi
+  done
+fi
+echo
+
+# Magento
+if [[ -z $magento_search ]]; then
+  echo 'No Magento installs found!'
+else
+  # Get the latest version of Magento and define it
+  new_magento_ver=$(curl -s https://api.github.com/repos/magento/magento2/tags | awk -F'"' '/name/ {print $4}' | awk -F'-' '!/-[A-Za-z]/ {print $0}' | head -1)
+  # Let the user know what the latest version is
+  echo -e "${BoldOn}Magento - Latest version is $new_magento_ver${BoldOff}"
+  for magento_path in $magento_search; do
+    # For each Magento define the Magento's version as a temporary variable
+    magento_version=$(grep "return '" $magento_path | awk -F"'" '{ print $2 }')
+    # Check the installed Magento version against the latest version
+    if [[ ${magento_version//./} -ne ${new_magento_ver//./} ]]; then
+      echo "$(echo "$magento_path" | sed 's/app\/Mage.php//g; s/users\/\.home\///g') = "$magento_version""
+    fi
+  done
+fi
+echo
+
+# Opencart
+if [[ -z $opencart_search ]]; then
+  echo 'No Opencart installs found!'
+else
+  # Get the latest version of Opencart and define it
+  new_opencart_ver=$(curl -s https://api.github.com/repos/opencart/opencart/tags | head -3 | awk -F'"' '/name/ {print $4}')
+  # Let the user know what the latest version is
+  echo -e "${BoldOn}Opencart - Latest version is $new_opencart_ver${BoldOff}"
+  for opencart_path in $opencart_search; do
+    # For each Opencart define the Opencart's version as a temporary variable
+    opencart_version=$(grep VERSION $opencart_path | awk -F"'" '{print $4}')
+    # Check the installed Opencart version against the latest version
+    if [[ ${opencart_version//./} -ne ${new_opencart_ver//./} ]]; then
+      echo "$(echo "$opencart_path" | sed 's/upload\/index.php//g; s/users\/\.home\///g') = "$opencart_version""
+    fi
+  done
+fi
+echo
+
+# Moodle
+if [[ -z $moodle_search ]]; then
+  echo 'No Moodle installs found!'
+else
+  # Get the latest version of Moodle and define it
+  new_moodle_ver=$(curl -s "https://git.moodle.org/gw?p=moodle.git;a=tags" | grep "list name" | head -1 | sed 's/\(.*\)>v\(.*\)<\/a>\(.*\)/\2/g')
+  # Let the user know what the latest version is
+  echo -e "${BoldOn}Moodle - Latest version is $new_moodle_ver${BoldOff}"
+  for moodle_path in $moodle_search; do
+    # For each Moodle define the Moodle's version as a temporary variable
+    moodle_version=$(grep VERSION $moodle_path | awk -F"'" '{print $4}')
+    # Check the installed Moodle version against the latest version
+    if [[ ${moodle_version//./} -ne ${new_moodle_ver//./} ]]; then
+      echo "$(echo "$moodle_path" | sed 's/upload\/index.php//g; s/users\/\.home\///g') = "$moodle_version""
+    fi
+  done
+fi
+echo
+
+IFS=$SAVEIFS
