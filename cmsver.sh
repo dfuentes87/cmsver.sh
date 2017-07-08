@@ -150,7 +150,7 @@ else
   echo -e "${BoldOn}Magento - Latest version is $new_magento_ver${BoldOff}"
   for magento_path in $magento_search; do
     # For each Magento define the Magento's version as a temporary variable
-    magento_version=$(grep "return '" $magento_path | awk -F"'" '{ print $2 }')
+    magento_version=$(grep -A 4 'return array(' $magento_path | grep -Eo '[0-9]' | xargs | sed 's/ /./g')
     # Check the installed Magento version against the latest version
     if [[ ${magento_version//./} -ne ${new_magento_ver//./} ]]; then
       echo "$(echo "$magento_path" | sed 's/app\/Mage.php//g; s/users\/\.home\///g') = "$magento_version""
