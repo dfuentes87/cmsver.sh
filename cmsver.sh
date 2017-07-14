@@ -67,16 +67,23 @@ if [[ -z $wp_search ]]; then
 else
   # Get the latest version of WordPress and define it
   new_wp_ver=$(curl -s http://api.wordpress.org/core/version-check/1.5/ | head -n 4 | tail -n 1)
-  # Let the user know what the latest version is
-  echo -e "${BoldOn}WordPress - Latest version is $new_wp_ver${BoldOff}"
   for wp_path in $wp_search; do
     # For each WordPress define the WordPress's version as a temporary variable
     wp_version=$(grep '$wp_version =' $wp_path | cut -d\' -f2)
     # Check the installed WordPress version against the latest version
     if [[ ${wp_version//./} -ne ${new_wp_ver//./} ]]; then
+      if [[ -z $wp_header ]]; then
+        # Let the user know what the latest version is
+        echo -e "${BoldOn}WordPress - Latest version is $new_wp_ver${BoldOff}"
+        wp_header=true
+      fi
       echo "$(echo "$wp_path" | sed 's/wp-includes\/version.php//g; s/users\/\.home\///g') = "$wp_version""
+      wp_found=true
     fi
   done
+  if [[ -z $wp_found ]]; then
+    echo '**WordPress installs found but are all up to date!'
+  fi
 fi
 echo
 
@@ -86,16 +93,23 @@ if [[ -z $joomla_search ]]; then
 else
   # Get the latest version of Joomla and define it
   new_joomla_ver=$(curl -s https://api.github.com/repos/joomla/joomla-cms/releases/latest | awk -F\" '/tag_name/ { print $4 }')
-  # Let the user know what the latest version is
-  echo -e "${BoldOn}Joomla - Latest version is $new_joomla_ver${BoldOff}"
   for joomla_path in $joomla_search; do
     # For each Joomla define the Joomla's version as a temporary variable
     joomla_version="$(grep -E "var|const|public" $joomla_path | awk -F\' '/RELEASE/{print$2}').$(grep -E "var|const|public" $joomla_path | awk -F\' '/DEV_LEVEL/{print$2}')"
     # Check the installed Joomla version against the latest version
     if [[ ${joomla_version//./} -ne ${new_joomla_ver//./} ]]; then
+      if [[ -z $joomla_header ]]; then
+        # Let the user know what the latest version is
+        echo -e "${BoldOn}Joomla - Latest version is $new_joomla_ver${BoldOff}"
+        joomla_header=true
+      fi
       echo "$(echo "$joomla_path" | sed 's/libraries\/.*.php//g; s/users\/\.home\///g') = "$joomla_version""
+      joomla_found=true
     fi
   done
+  if [[ -z $joomla_found ]]; then
+    echo '**Joomla installs found but are all up to date!'
+  fi
 fi
 echo
 
@@ -108,16 +122,23 @@ else
   new_drupal_ver1=$( curl -s https://www.drupal.org/project/drupal | grep '<h4>Drupal core' | grep -v dev | head -n 1 | awk -F' ' '{print $3}' | awk -F'<' '{print $1}' )
   # This second one is considered older but still up to date
   new_drupal_ver2=$( curl -s https://www.drupal.org/project/drupal | grep '<h4>Drupal core' | grep -v dev | head -n 2 | tail -n 1 | awk -F' ' '{print $3}' | awk -F'<' '{print $1}' )
-  # Let the user know what the latest version is
-  echo -e "${BoldOn}Drupal - Latest version is $new_drupal_ver1, stable version is $new_drupal_ver2${BoldOff}"
   for drupal_path in $drupal_search; do
     # For each Drupal define the Drupal's version as a temporary variable
     drupal_version=$(grep "version = \"" $drupal_path | cut -d '"' -f2)
     # Check the installed Drupal version against the latest version
     if [[ ${drupal_version//./} -ne ${new_drupal_ver1//./} ]] && [[ ${drupal_version//./} -ne ${new_drupal_ver2//./} ]]; then
+      if [[ -z $drupal_header ]]; then
+        # Let the user know what the latest version is
+        echo -e "${BoldOn}Drupal - Latest version is $new_drupal_ver1, stable version is $new_drupal_ver2${BoldOff}"
+        drupal_header=true
+      fi
       echo "$(echo "$drupal_path" | sed 's/modules\/system\/system\.info//g; s/users\/\.home\///g') = "$drupal_version""
+      drupal_found=true
     fi
   done
+  if [[ -z $drupal_found ]]; then
+    echo '**Drupal installs found but are all up to date!'
+  fi
 fi
 echo
 
@@ -127,16 +148,23 @@ if [[ -z $phpbb_search ]]; then
 else
   # Get the latest version of phpBB and define it
   new_phpbb_ver=$(curl -s https://api.github.com/repos/phpbb/phpbb/tags | awk -F'"' '/name/ {print $4}' | awk -F'-' '!/-[A-Za-z]/ {print $0}' | awk -F'-' 'NR==2{print $2}')
-  # Let the user know what the latest version is
-  echo -e "${BoldOn}phpBB - Latest version is $new_phpbb_ver${BoldOff}"
   for phpbb_path in $phpbb_search; do
     # For each phpBB define the phpBB's version as a temporary variable
     phpbb_version=$(grep -H "version.=." $phpbb_path | awk 'NR==1{print $3}')
     # Check the installed phpBB version against the latest version
     if [[ ${phpbb_version//./} -ne ${new_phpbb_ver//./} ]]; then
+      if [[ -z $phpbb_header ]]; then
+        # Let the user know what the latest version is
+        echo -e "${BoldOn}phpBB - Latest version is $new_phpbb_ver${BoldOff}"
+        php_header=true
+      fi
       echo "$(echo "$phpbb_path" | sed 's/styles\/prosilver\/style.cfg//g; s/users\/\.home\///g') = "$phpbb_version""
+      phpbb_found=true
     fi
   done
+  if [[ -z $phpbb_found ]]; then
+    echo '**phpBB installs found but are all up to date!'
+  fi
 fi
 echo
 
@@ -146,16 +174,23 @@ if [[ -z $magento_search ]]; then
 else
   # Get the latest version of Magento and define it
   new_magento_ver=$(curl -s https://api.github.com/repos/magento/magento2/tags | awk -F'"' '/name/ {print $4}' | awk -F'-' '!/-[A-Za-z]/ {print $0}' | head -1)
-  # Let the user know what the latest version is
-  echo -e "${BoldOn}Magento - Latest version is $new_magento_ver${BoldOff}"
   for magento_path in $magento_search; do
     # For each Magento define the Magento's version as a temporary variable
     magento_version=$(grep -A 4 'return array(' $magento_path | grep -Eo '[0-9]' | xargs | sed 's/ /./g')
     # Check the installed Magento version against the latest version
     if [[ ${magento_version//./} -ne ${new_magento_ver//./} ]]; then
+      if [[ -z $magento_header ]]; then
+        # Let the user know what the latest version is
+        echo -e "${BoldOn}Magento - Latest version is $new_magento_ver${BoldOff}"
+        magento_header=true
+      fi
       echo "$(echo "$magento_path" | sed 's/app\/Mage.php//g; s/users\/\.home\///g') = "$magento_version""
+      magento_found=true
     fi
   done
+  if [[ -z $magento_found ]]; then
+    echo '**Magento installs found but are all up to date!'
+  fi
 fi
 echo
 
@@ -165,16 +200,23 @@ if [[ -z $opencart_search ]]; then
 else
   # Get the latest version of Opencart and define it
   new_opencart_ver=$(curl -s https://api.github.com/repos/opencart/opencart/tags | head -3 | awk -F'"' '/name/ {print $4}')
-  # Let the user know what the latest version is
-  echo -e "${BoldOn}Opencart - Latest version is $new_opencart_ver${BoldOff}"
   for opencart_path in $opencart_search; do
     # For each Opencart define the Opencart's version as a temporary variable
     opencart_version=$(grep VERSION $opencart_path | awk -F"'" '{print $4}')
     # Check the installed Opencart version against the latest version
     if [[ ${opencart_version//./} -ne ${new_opencart_ver//./} ]]; then
+      if [[ -z $opencart_header ]]; then
+        # Let the user know what the latest version is
+        echo -e "${BoldOn}Opencart - Latest version is $new_opencart_ver${BoldOff}"
+        opencart_header=true
+      fi
       echo "$(echo "$opencart_path" | sed 's/upload\/index.php//g; s/users\/\.home\///g') = "$opencart_version""
+      opencart_found=true
     fi
   done
+  if [[ -z $opencart_found ]]; then
+    echo '**Opencart installs found but are all up to date!'
+  fi
 fi
 echo
 
@@ -184,16 +226,23 @@ if [[ -z $moodle_search ]]; then
 else
   # Get the latest version of Moodle and define it
   new_moodle_ver=$(curl -s "https://git.moodle.org/gw?p=moodle.git;a=tags" | grep "list name" | head -1 | sed 's/\(.*\)>v\(.*\)<\/a>\(.*\)/\2/g')
-  # Let the user know what the latest version is
-  echo -e "${BoldOn}Moodle - Latest version is $new_moodle_ver${BoldOff}"
   for moodle_path in $moodle_search; do
     # For each Moodle define the Moodle's version as a temporary variable
     moodle_version=$(grep VERSION $moodle_path | awk -F"'" '{print $4}')
     # Check the installed Moodle version against the latest version
     if [[ ${moodle_version//./} -ne ${new_moodle_ver//./} ]]; then
+      if [[ -z $moodle_header ]]; then
+        # Let the user know what the latest version is
+        echo -e "${BoldOn}Moodle - Latest version is $new_moodle_ver${BoldOff}"
+        moodle_header=true
+      fi
       echo "$(echo "$moodle_path" | sed 's/upload\/index.php//g; s/users\/\.home\///g') = "$moodle_version""
+      moodle_found=true
     fi
   done
+  if [[ -z $moodle_found ]]; then
+    echo '**Moodle installs found but are all up to date!'
+  fi
 fi
 echo
 
