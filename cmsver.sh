@@ -26,7 +26,7 @@ if [[ ! -z "$SITE" ]]; then
   phpbb_search=$(find ~/domains/*/ -maxdepth 7 -iwholename "*prosilver/style.cfg") 
   magento_search=$(find ~/domains/*/ -maxdepth 7 -iwholename "*/app/Mage.php") 
   opencart_search=$(find ~/domains/*/ -maxdepth 7 -iwholename "*/upload/index.php") 
-  moodle_search=$(find $(find ~/domains/*/ -maxdepth 5 -type f -name "TRADEMARK.txt" | sed 's/TRADEMARK.txt//') -maxdepth 1 -name "version.php" -print > ./moodlelist) 
+  moodle_search=$(find $(find ~/domains/*/ -maxdepth 5 -type f -name "TRADEMARK.txt" | sed 's/TRADEMARK.txt//') -maxdepth 1 -name "version.php" -print) 
 ## If it's a DV with Plesk or DV Dev
 elif [[ -f "/usr/local/psa/version" ]] || [[ ! -f "/usr/local/psa/version" ]] && [[ ! -f "/usr/local/cpanel/version" ]]; then
   # Exit the script if not run using sudo/root
@@ -40,7 +40,7 @@ elif [[ -f "/usr/local/psa/version" ]] || [[ ! -f "/usr/local/psa/version" ]] &&
     phpbb_search=$(find /var/www/ -maxdepth 7 -iwholename "*prosilver/style.cfg")
     magento_search=$(find /var/www/ -maxdepth 7 -iwholename "*/app/Mage.php")
     opencart_search=$(find /var/www/ -maxdepth 7 -iwholename "*/upload/index.php")
-    moodle_search=$(find $(find /var/www/ -maxdepth 5 -type f -name "TRADEMARK.txt" | sed 's/TRADEMARK.txt//') -maxdepth 1 -name "version.php" -print > ./moodlelist)
+    moodle_search=$(find $(find /var/www/ -maxdepth 5 -type f -name "TRADEMARK.txt" | sed 's/TRADEMARK.txt//') -maxdepth 1 -name "version.php" -print)
   fi
 
 ## If it's a DV with cPanel
@@ -56,7 +56,7 @@ elif [[ -f "/usr/local/cpanel/version" ]]; then
     phpbb_search=$(find /home/*/ -maxdepth 6 -iwholename "*prosilver/style.cfg")
     magento_search=$(find /home/*/ -maxdepth 6 -iwholename "*/app/Mage.php")
     opencart_search=$(find /home/*/ -maxdepth 6 -iwholename "*/upload/index.php")
-    moodle_search=$(find $(find /home/*/ -maxdepth 6 -type f -name "TRADEMARK.txt" | sed 's/TRADEMARK.txt//') -maxdepth 1 -name "version.php" -print > ./moodlelist)
+    moodle_search=$(find $(find /home/*/ -maxdepth 6 -type f -name "TRADEMARK.txt" | sed 's/TRADEMARK.txt//') -maxdepth 1 -name "version.php" -print)
   fi
 fi
 
