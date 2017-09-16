@@ -2,9 +2,8 @@
 
 ###############################################################################
 
-# Find popular CMS (and the WP Revslider plugin) installed on a Media Temple
-# Grid or DV with Plesk/cPanel, and verify the version against the latest
-# official version release.
+# Find popular CMS installed on a Media Temple Grid or DV with Plesk/cPanel,
+# and verify the version against the latest official version release.
 
 ###############################################################################
 
