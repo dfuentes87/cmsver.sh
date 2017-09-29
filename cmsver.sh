@@ -227,7 +227,9 @@ else
   new_moodle_ver=$(curl -s "https://git.moodle.org/gw?p=moodle.git;a=tags" | grep "list name" | head -1 | sed 's/\(.*\)>v\(.*\)<\/a>\(.*\)/\2/g')
   for moodle_path in $moodle_search; do
     # For each Moodle define the Moodle's version as a temporary variable
-    moodle_version=$(grep VERSION $moodle_path | awk -F"'" '{print $4}')
+    if [ -z $(moodle_version=$(grep VERSION $moodle_path | awk -F"'" '{print $4}')) ]; then
+      moodle_version=$(awk -F"'" '/\$release/ {print $2}' /home/129300/domains/radioandarcolombia.com/html/-moodle/version.php | awk '{print $1}')
+    fi
     # Check the installed Moodle version against the latest version
     if [[ ${moodle_version//./} -ne ${new_moodle_ver//./} ]]; then
       if [[ -z $moodle_header ]]; then
@@ -235,7 +237,7 @@ else
         echo -e "${BoldOn}Moodle - Latest version is $new_moodle_ver${BoldOff}"
         moodle_header=true
       fi
-      echo "$(echo "$moodle_path" | sed 's/upload\/index.php//g; s/users\/\.home\///g') = "$moodle_version""
+      echo "$(echo "$moodle_path" | sed 's/version.php//g; s/users\/\.home\///g') = "$moodle_version""
       moodle_found=true
     fi
   done
