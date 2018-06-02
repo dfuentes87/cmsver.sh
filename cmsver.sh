@@ -155,7 +155,7 @@ else
       if [[ -z $phpbb_header ]]; then
         # Let the user know what the latest version is
         echo -e "${BoldOn}phpBB - Latest version is $new_phpbb_ver${BoldOff}"
-        php_header=true
+        phpbb_header=true
       fi
       echo "$(echo "$phpbb_path" | sed 's/styles\/prosilver\/style.cfg//g; s/users\/\.home\///g') = "$phpbb_version""
       phpbb_found=true
