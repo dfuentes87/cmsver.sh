@@ -63,7 +63,7 @@ else
         echo -e "${BoldOn}WordPress - Latest version is $new_wp_ver${BoldOff}"
         wp_header=true
       fi
-      echo "$(echo "${wp_path}" | sed 's/wp-includes\/version.php//g; s/users\/\.home\///g; s/\/vz\/root.*[0-9]\/var/\/var/g; s/\/vz\/root.*[0-9]\/home/\/home/g') = "$wp_version""
+      echo "$(echo "${wp_path}" | sed 's/wp-includes\/version.php//g; s/users\/\.home\///g') = $wp_version"
       wp_found=true
     fi
   done
@@ -118,7 +118,7 @@ else
         echo -e "${BoldOn}Drupal - Latest version is ${new_drupal_ver1}, stable version is ${new_drupal_ver2}${BoldOff}"
         drupal_header=true
       fi
-      echo "$(echo "${drupal_path}" | sed 's/modules\/system\/system\.info//g; s/users\/\.home\///g; s/\/vz\/root.*[0-9]\/var/\/var/g; s/\/vz\/root.*[0-9]\/home/\/home/g') = "$drupal_version""
+      echo $(echo "$drupal_path" | sed 's/modules\/system\/system\.info//g; s/users\/\.home\///g') = "$drupal_version"
       drupal_found=true
     fi
   done
@@ -144,7 +144,7 @@ else
         echo -e "${BoldOn}phpBB - Latest version is ${new_phpbb_ver}${BoldOff}"
         phpbb_header=true
       fi
-      echo "$(echo "${phpbb_path}" | sed 's/styles\/prosilver\/style.cfg//g; s/users\/\.home\///g; s/\/vz\/root.*[0-9]\/var/\/var/g; s/\/vz\/root.*[0-9]\/home/\/home/g') = "$phpbb_version""
+      echo "$(echo "$phpbb_path" | sed 's/styles\/prosilver\/style.cfg//g; s/users\/\.home\///g') = "$phpbb_version""
       phpbb_found=true
     fi
   done
@@ -170,7 +170,7 @@ else
         echo -e "${BoldOn}Magento - Latest version is ${new_magento_ver}${BoldOff}"
         magento_header=true
       fi
-      echo "$(echo "${magento_path}" | sed 's/app\/Mage.php//g; s/users\/\.home\///g; s/\/vz\/root.*[0-9]\/var/\/var/g; s/\/vz\/root.*[0-9]\/home/\/home/g') = "$magento_version""
+      echo "$(echo "$magento_path" | sed 's/app\/Mage.php//g; s/users\/\.home\///g') = "$magento_version""
       magento_found=true
     fi
   done
@@ -196,7 +196,7 @@ else
         echo -e "${BoldOn}Opencart - Latest version is ${new_opencart_ver}${BoldOff}"
         opencart_header=true
       fi
-      echo "$(echo "${opencart_path}" | sed 's/upload\/index.php//g; s/users\/\.home\///g; s/\/vz\/root.*[0-9]\/var/\/var/g; s/\/vz\/root.*[0-9]\/home/\/home/g') = "$opencart_version""
+      echo "$(echo "$opencart_path" | sed 's/upload\/index.php//g; s/users\/\.home\///g') = "$opencart_version""
       opencart_found=true
     fi
   done
